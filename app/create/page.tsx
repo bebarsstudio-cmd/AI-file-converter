@@ -13,7 +13,7 @@ import {
   Wand2,
 } from "lucide-react";
 
-const TARGETS = ["C++", "Java", "JavaScript", "TypeScript"];
+const TARGETS = ["JavaScript", "C++", "Java", "TypeScript"];
 
 const EXAMPLE_IDEAS = [
   "Pomodoro timer with tasks and session stats",
@@ -78,11 +78,13 @@ export default function CreatePage() {
   const [generating, setGenerating] = useState(false);
   const [app, setApp] = useState<GeneratedFile | null>(null);
   const [view, setView] = useState<"preview" | "code">("preview");
-  const [target, setTarget] = useState("C++");
+  const [target, setTarget] = useState("JavaScript");
   const [converting, setConverting] = useState(false);
   const [converted, setConverted] = useState<GeneratedFile | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<"app" | "converted" | null>(null);
+  const [appTruncated, setAppTruncated] = useState(false);
+  const [convertedTruncated, setConvertedTruncated] = useState(false);
 
   const generate = async () => {
     const trimmed = idea.trim();
@@ -91,6 +93,8 @@ export default function CreatePage() {
     setError("");
     setApp(null);
     setConverted(null);
+    setAppTruncated(false);
+    setConvertedTruncated(false);
     try {
       const res = await fetch("/api/ai/create", {
         method: "POST",
@@ -105,6 +109,7 @@ export default function CreatePage() {
       }
       if (!data?.file) throw new Error("The AI returned an unexpected response.");
       setApp(data.file as GeneratedFile);
+      setAppTruncated(data.file.truncated === true);
       setView("preview");
     } catch (err) {
       setError(err instanceof Error ? err.message : "The AI request failed.");
@@ -118,6 +123,7 @@ export default function CreatePage() {
     setConverting(true);
     setError("");
     setConverted(null);
+    setConvertedTruncated(false);
     try {
       const res = await fetch("/api/ai/create", {
         method: "POST",
@@ -136,6 +142,7 @@ export default function CreatePage() {
       }
       if (!data?.file) throw new Error("The AI returned an unexpected response.");
       setConverted(data.file as GeneratedFile);
+      setConvertedTruncated(data.file.truncated === true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "The AI request failed.");
     } finally {
@@ -157,13 +164,13 @@ export default function CreatePage() {
     <div className="mx-auto flex max-w-4xl flex-col px-4 py-12 md:py-16">
       {/* Header */}
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 shadow-lg shadow-purple-900/30">
+        <div className="animate-glow mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 shadow-lg shadow-purple-900/30">
           <Wand2 size={22} className="text-white" />
         </div>
         <h1 className="text-3xl font-bold text-white md:text-4xl">Create an App</h1>
         <p className="mt-2 text-gray-400">
           Describe what you want — the AI builds a complete web app — then
-          transform it to C++, Java, JavaScript or TypeScript.
+          transform it to JavaScript, C++, Java or TypeScript.
         </p>
       </div>
 
@@ -203,7 +210,7 @@ export default function CreatePage() {
             type="button"
             onClick={generate}
             disabled={!idea.trim() || generating}
-            className="ml-auto flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2 font-medium text-white shadow-lg shadow-purple-900/20 transition-all hover:from-purple-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-700 disabled:shadow-none"
+            className="btn-gradient ml-auto flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2 font-medium text-white shadow-lg shadow-purple-900/20 transition-all hover:from-purple-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-700 disabled:shadow-none"
           >
             {generating ? (
               <>
@@ -226,9 +233,21 @@ export default function CreatePage() {
         </div>
       )}
 
+      {generating && (
+        <div className="animate-in-up glass mt-6 flex items-center gap-4 rounded-2xl p-6">
+          <Spinner />
+          <div>
+            <p className="font-medium text-white">Generating your app…</p>
+            <p className="mt-0.5 text-xs text-gray-500">
+              This can take a while — the AI is writing your app.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Generated app */}
       {app && (
-        <div className="glass mt-6 rounded-2xl p-4 md:p-6">
+        <div className="animate-in-up glass mt-6 rounded-2xl p-4 md:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-white">{app.name}</span>
@@ -244,6 +263,13 @@ export default function CreatePage() {
               </button>
             </div>
           </div>
+
+          {appTruncated && (
+            <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-200">
+              The AI output may be incomplete — it was cut off before the file
+              finished. Try Regenerate, or describe a smaller app.
+            </div>
+          )}
 
           <div className="mt-4">
             {view === "preview" ? (
@@ -292,7 +318,7 @@ export default function CreatePage() {
                 type="button"
                 onClick={convert}
                 disabled={converting}
-                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-1.5 text-sm font-medium text-white shadow-lg shadow-purple-900/20 transition-all hover:from-purple-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-700"
+                className="btn-gradient flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-1.5 text-sm font-medium text-white shadow-lg shadow-purple-900/20 transition-all hover:from-purple-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-700"
               >
                 {converting ? <Spinner /> : <ArrowRight size={14} />}
                 Transform
@@ -306,9 +332,21 @@ export default function CreatePage() {
         </div>
       )}
 
+      {converting && (
+        <div className="animate-in-up glass mt-6 flex items-center gap-4 rounded-2xl p-6">
+          <Spinner />
+          <div>
+            <p className="font-medium text-white">Transforming to {target}…</p>
+            <p className="mt-0.5 text-xs text-gray-500">
+              This can take a while — the AI is rewriting your app.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Converted result */}
       {converted && (
-        <div className="glass mt-6 rounded-2xl p-4 md:p-6">
+        <div className="animate-in-up glass mt-6 rounded-2xl p-4 md:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-white">{converted.name}</span>
@@ -335,6 +373,12 @@ export default function CreatePage() {
               </button>
             </div>
           </div>
+          {convertedTruncated && (
+            <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-200">
+              The AI output may be incomplete — it was cut off before the file
+              finished. Try transforming again.
+            </div>
+          )}
           <pre className="mt-4 max-h-96 overflow-auto whitespace-pre rounded-xl border border-white/10 bg-black/40 p-4 font-mono text-xs leading-relaxed text-gray-300">
             {converted.code}
           </pre>

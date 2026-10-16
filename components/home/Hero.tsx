@@ -20,7 +20,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className="text-center space-y-4">
+    <div className="animate-in-up text-center space-y-4">
       <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-gradient">
   AI File Converter
 </h1>

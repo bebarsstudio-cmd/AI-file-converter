@@ -52,12 +52,13 @@ const ghostButton =
  */
 export default function HomeSetup() {
   const [prompt, setPrompt] = useState("");
-  const [targetLang, setTargetLang] = useState("C++");
+  const [targetLang, setTargetLang] = useState("JavaScript");
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [isTransforming, setIsTransforming] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ConvertedResult | null>(null);
+  const [resultTruncated, setResultTruncated] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handlePromptChange = (value: string) => {
@@ -102,6 +103,7 @@ export default function HomeSetup() {
     setIsTransforming(true);
     setError("");
     setResult(null);
+    setResultTruncated(false);
     try {
       const parts = await Promise.all(
         readableFiles.map(
@@ -147,6 +149,7 @@ export default function HomeSetup() {
       }
       if (!data?.file) throw new Error("The AI returned an unexpected response.");
       setResult(data.file as ConvertedResult);
+      setResultTruncated(data.file.truncated === true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "The AI request failed.");
     } finally {
@@ -186,8 +189,20 @@ export default function HomeSetup() {
 
       <FileUpload files={files} onFilesChange={setFiles} />
 
+      {isTransforming && (
+        <div className="animate-in-up glass flex items-center gap-4 rounded-2xl p-6">
+          <span className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          <div>
+            <p className="font-medium text-white">Transforming your project…</p>
+            <p className="mt-0.5 text-xs text-gray-500">
+              This can take a while — the AI is converting your files.
+            </p>
+          </div>
+        </div>
+      )}
+
       {result && (
-        <div className="glass rounded-2xl p-4 md:p-6">
+        <div className="animate-in-up glass rounded-2xl p-4 md:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-white">{result.name}</span>
@@ -210,6 +225,12 @@ export default function HomeSetup() {
               </button>
             </div>
           </div>
+          {resultTruncated && (
+            <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-200">
+              The AI output may be incomplete — it was cut off before the file
+              finished. Try again, or convert fewer files.
+            </div>
+          )}
           <pre className="mt-4 max-h-96 overflow-auto whitespace-pre rounded-xl border border-white/10 bg-black/40 p-4 font-mono text-xs leading-relaxed text-gray-300">
             {result.code}
           </pre>

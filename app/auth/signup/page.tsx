@@ -4,13 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getAuthErrorMessage, signUpWithEmail } from "@/lib/firebase/auth";
-import { Sparkles } from "lucide-react";
+import { ArrowLeftRight, Check, Sparkles, User, Users, Wand2 } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [usageMode, setUsageMode] = useState<"solo" | "team" | null>(null);
+  const [purpose, setPurpose] = useState<"convert" | "create" | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,7 +22,12 @@ export default function SignupPage() {
     setError("");
 
     try {
-      await signUpWithEmail(name, email, password);
+      await signUpWithEmail(
+        name,
+        email,
+        password,
+        usageMode && purpose ? { usageMode, purpose } : undefined
+      );
 
       // Redirect to workspace
       router.push("/workspace");
@@ -32,9 +39,16 @@ export default function SignupPage() {
     }
   };
 
+  const optionClass = (selected: boolean) =>
+    `relative flex w-full flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all duration-200 ${
+      selected
+        ? "border-purple-500/60 bg-purple-500/10 shadow-[0_0_24px_-6px_rgba(168,85,247,0.6)]"
+        : "border-white/10 bg-white/5 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.08]"
+    }`;
+
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
-      <div className="glass rounded-2xl p-8 w-full max-w-md ring-glow transition-all">
+      <div className="glass rounded-2xl p-8 w-full max-w-md ring-glow transition-all animate-in-up">
         <div className="flex items-center justify-center gap-2 mb-6">
           <Sparkles className="text-purple-400" size={24} />
           <h1 className="text-3xl font-bold text-white">Create Account</h1>
@@ -84,10 +98,74 @@ export default function SignupPage() {
             />
           </div>
           
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Are you working by yourself or with a team?
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setUsageMode("solo")}
+                className={optionClass(usageMode === "solo")}
+              >
+                {usageMode === "solo" && (
+                  <Check size={13} className="absolute right-2 top-2 text-purple-300" />
+                )}
+                <User size={20} className={usageMode === "solo" ? "text-purple-300" : "text-gray-500"} />
+                <span className="text-sm font-medium text-white">Just me</span>
+                <span className="text-[11px] text-gray-500">Solo projects</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setUsageMode("team")}
+                className={optionClass(usageMode === "team")}
+              >
+                {usageMode === "team" && (
+                  <Check size={13} className="absolute right-2 top-2 text-purple-300" />
+                )}
+                <Users size={20} className={usageMode === "team" ? "text-purple-300" : "text-gray-500"} />
+                <span className="text-sm font-medium text-white">With a team</span>
+                <span className="text-[11px] text-gray-500">Shared projects</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              What do you want to use it for?
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setPurpose("convert")}
+                className={optionClass(purpose === "convert")}
+              >
+                {purpose === "convert" && (
+                  <Check size={13} className="absolute right-2 top-2 text-purple-300" />
+                )}
+                <ArrowLeftRight size={20} className={purpose === "convert" ? "text-purple-300" : "text-gray-500"} />
+                <span className="text-sm font-medium text-white">Converting</span>
+                <span className="text-[11px] text-gray-500">Existing projects</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPurpose("create")}
+                className={optionClass(purpose === "create")}
+              >
+                {purpose === "create" && (
+                  <Check size={13} className="absolute right-2 top-2 text-purple-300" />
+                )}
+                <Wand2 size={20} className={purpose === "create" ? "text-purple-300" : "text-gray-500"} />
+                <span className="text-sm font-medium text-white">Creating</span>
+                <span className="text-[11px] text-gray-500">New apps</span>
+              </button>
+            </div>
+          </div>
+
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-purple-900/20 flex items-center justify-center gap-2"
+            disabled={loading || !usageMode || !purpose}
+            className="btn-gradient w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-purple-900/20 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

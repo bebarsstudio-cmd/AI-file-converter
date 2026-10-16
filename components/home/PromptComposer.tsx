@@ -31,12 +31,12 @@ export default function PromptComposer({
     }
   }, [prompt]);
 
-  const languages = ["C++", "Java", "JavaScript", "TypeScript"];
+  const languages = ["JavaScript", "C++", "Java", "TypeScript"];
 
   return (
     <div
       id="prompt-composer"
-      className="glass rounded-2xl p-4 md:p-6 shadow-2xl shadow-purple-900/10 transition-all focus-within:border-purple-500/30"
+      className="animate-in-up glass rounded-2xl p-4 md:p-6 shadow-2xl shadow-purple-900/10 transition-all focus-within:border-purple-500/30"
     >
       <div className="flex items-center gap-2 mb-3 text-purple-400">
         <Sparkles size={18} />
@@ -64,13 +64,18 @@ export default function PromptComposer({
               <option key={lang} value={lang} className="bg-gray-900">{lang}</option>
             ))}
           </select>
+          {targetLang === "JavaScript" && (
+            <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-2 py-0.5 text-[10px] font-medium text-purple-300">
+              any file → JS
+            </span>
+          )}
         </div>
 
         <button
           type="button"
           onClick={onSubmit}
           disabled={!canSubmit || isSubmitting}
-          className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-medium px-5 py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20 disabled:shadow-none"
+          className="btn-gradient flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-medium px-5 py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20 disabled:shadow-none"
         >
           {isSubmitting ? (
             <>

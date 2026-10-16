@@ -78,14 +78,15 @@ export async function POST(request: Request) {
 
   try {
     const provider = getAIProvider();
-    const content = await provider.chat(messages, {
+    const reply = await provider.chat(messages, {
       temperature: typeof temperature === "number" ? temperature : undefined,
       maxTokens: typeof maxTokens === "number" ? maxTokens : undefined,
     });
     return NextResponse.json({
       provider: provider.name,
       model: provider.model,
-      content,
+      content: reply.content,
+      finishReason: reply.finishReason,
     });
   } catch (error) {
     return NextResponse.json(

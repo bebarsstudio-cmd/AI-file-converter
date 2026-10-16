@@ -1,13 +1,21 @@
 import type { ChatMessage, ChatOptions } from "./provider";
 
+/** The assistant's reply plus why the model stopped generating. */
+export interface ChatResult {
+  /** The assistant's reply text. */
+  content: string;
+  /** Provider finish reason, e.g. "stop" or "length" (cut off mid-output). */
+  finishReason: string | null;
+}
+
 /** A configured AI provider that can run chat completions. */
 export interface AIProvider {
   /** Human-readable provider name, e.g. "Google Gemini (Google AI Studio)". */
   name: string;
   /** The model id requests are sent to. */
   model: string;
-  /** Sends the conversation and returns the assistant's reply text. */
-  chat(messages: ChatMessage[], options?: ChatOptions): Promise<string>;
+  /** Sends the conversation and returns the assistant's reply. */
+  chat(messages: ChatMessage[], options?: ChatOptions): Promise<ChatResult>;
 }
 
 interface OpenAICompatibleConfig {
@@ -125,13 +133,18 @@ export function createOpenAICompatibleProvider(
       }
 
       const data = await res.json();
-      const content = data?.choices?.[0]?.message?.content;
+      const choice = data?.choices?.[0];
+      const content = choice?.message?.content;
       if (typeof content !== "string" || content.length === 0) {
         throw new Error(
           `${label} returned an unexpected response shape: ${JSON.stringify(data).slice(0, 200)}`
         );
       }
-      return content;
+      return {
+        content,
+        finishReason:
+          typeof choice?.finish_reason === "string" ? choice.finish_reason : null,
+      };
     },
   };
 }

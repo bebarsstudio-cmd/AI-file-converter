@@ -311,7 +311,7 @@ export default function AboutPage() {
             href={GITHUB_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2.5 font-medium text-white shadow-lg shadow-purple-900/20 transition-all hover:from-purple-500 hover:to-blue-500"
+            className="btn-gradient flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2.5 font-medium text-white shadow-lg shadow-purple-900/20 transition-all hover:from-purple-500 hover:to-blue-500"
           >
             <GithubMark size={18} />
             Star on GitHub
@@ -360,7 +360,7 @@ export default function AboutPage() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/create"
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2.5 font-medium text-white shadow-lg shadow-purple-900/20 transition-all hover:from-purple-500 hover:to-blue-500"
+              className="btn-gradient flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2.5 font-medium text-white shadow-lg shadow-purple-900/20 transition-all hover:from-purple-500 hover:to-blue-500"
             >
               <Wand2 size={16} />
               Create an app

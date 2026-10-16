@@ -36,7 +36,7 @@ export default function FileUpload({ files, onFilesChange }: FileUploadProps) {
   };
 
   return (
-    <div id="file-upload" className="glass rounded-2xl p-4 md:p-6">
+    <div id="file-upload" className="animate-in-up glass rounded-2xl p-4 md:p-6">
       <div 
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}

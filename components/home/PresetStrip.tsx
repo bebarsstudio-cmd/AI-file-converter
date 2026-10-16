@@ -94,7 +94,7 @@ export default function PresetStrip({ onSelect, selectedId }: PresetStripProps) 
   const loopedPresets = Array.from({ length: LOOP_COPIES }, () => PRESETS).flat();
 
   return (
-    <section aria-label="Preset recipes">
+    <section aria-label="Preset recipes" className="animate-in-up">
       <div className="mb-3 flex items-end justify-between">
         <div className="flex items-center gap-2">
           <Compass size={16} className="text-purple-400" />
@@ -134,7 +134,7 @@ export default function PresetStrip({ onSelect, selectedId }: PresetStripProps) 
                 className={`mr-3 w-60 shrink-0 rounded-xl border p-3.5 text-left transition-all duration-200 ${
                   isSelected
                     ? "border-purple-500/50 bg-purple-500/[0.07]"
-                    : "border-white/10 bg-white/[0.03] hover:-translate-y-0.5 hover:border-purple-500/30 hover:bg-white/[0.06]"
+                    : "border-white/10 bg-white/[0.03] hover:-translate-y-0.5 hover:border-purple-500/30 hover:bg-white/[0.06] hover:shadow-[0_0_28px_-8px_rgba(168,85,247,0.55)]"
                 }`}
               >
                 <div className="flex items-center gap-2.5">

@@ -38,7 +38,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
-      <div className="glass rounded-2xl p-8 w-full max-w-md ring-glow transition-all">
+      <div className="animate-in-up glass rounded-2xl p-8 w-full max-w-md ring-glow transition-all">
         {sent ? (
           <div className="text-center">
             <MailCheck className="text-purple-400 mx-auto mb-4" size={44} />
@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
             </p>
             <Link
               href="/auth/login"
-              className="inline-block w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-purple-900/20"
+              className="btn-gradient inline-block w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-purple-900/20"
             >
               Back to sign in
             </Link>
@@ -90,7 +90,7 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-purple-900/20 flex items-center justify-center gap-2"
+                className="btn-gradient w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-purple-900/20 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>

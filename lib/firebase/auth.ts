@@ -86,11 +86,18 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+/** Optional answers from the signup questions, stored on the profile document. */
+export interface SignupOnboarding {
+  usageMode: "solo" | "team";
+  purpose: "convert" | "create";
+}
+
 /** Creates the Firebase Auth account and the matching Firestore profile document. */
 export async function signUpWithEmail(
   name: string,
   email: string,
-  password: string
+  password: string,
+  onboarding?: SignupOnboarding
 ): Promise<User> {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
   const user = credential.user;
@@ -113,6 +120,9 @@ export async function signUpWithEmail(
         conversationCount: 0,
         dailyRequests: 0,
         lastRequestDate: todayISO(),
+        ...(onboarding
+          ? { usageMode: onboarding.usageMode, purpose: onboarding.purpose }
+          : {}),
       }),
       PROFILE_WRITE_TIMEOUT_MS
     );

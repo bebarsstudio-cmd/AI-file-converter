@@ -130,7 +130,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/auth/signup"
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20"
+                    className="btn-gradient bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all shadow-lg shadow-purple-900/20"
                   >
                     Sign Up
                   </Link>
@@ -189,7 +189,7 @@ export default function Navbar() {
                   <Link
                     href="/auth/signup"
                     onClick={() => setIsOpen(false)}
-                    className="block text-center bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-all shadow-lg shadow-purple-900/20"
+                    className="btn-gradient block text-center bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-all shadow-lg shadow-purple-900/20"
                   >
                     Sign Up
                   </Link>
