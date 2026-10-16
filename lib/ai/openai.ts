@@ -8,6 +8,18 @@ export interface ChatResult {
   finishReason: string | null;
 }
 
+/** Thrown when a provider rejects a request because of a rate limit (HTTP 429). */
+export class AIRateLimitError extends Error {
+  /** Seconds the provider suggests waiting before retrying, when it says so. */
+  readonly retryAfterSeconds: number | null;
+
+  constructor(message: string, retryAfterSeconds: number | null) {
+    super(message);
+    this.name = "AIRateLimitError";
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
 /** A configured AI provider that can run chat completions. */
 export interface AIProvider {
   /** Human-readable provider name, e.g. "Google Gemini (Google AI Studio)". */
@@ -85,22 +97,24 @@ export function createOpenAICompatibleProvider(
     model,
 
     async chat(messages, options) {
-      const res = await request("/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model,
-          messages,
-          ...(options?.temperature !== undefined
-            ? { temperature: options.temperature }
-            : {}),
-          ...(options?.maxTokens !== undefined
-            ? { max_tokens: options.maxTokens }
-            : {}),
-        }),
-      });
+      const send = (maxTokens: number | undefined) =>
+        request("/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model,
+            messages,
+            ...(options?.temperature !== undefined
+              ? { temperature: options.temperature }
+              : {}),
+            ...(maxTokens !== undefined ? { max_tokens: maxTokens } : {}),
+          }),
+        });
 
-      if (!res.ok) {
+      let res = await send(options?.maxTokens);
+
+      // Reads the error body into a readable one-line detail.
+      const readError = async (): Promise<string> => {
         const raw = await res.text().catch(() => "");
         let detail = raw.slice(0, 300);
         try {
@@ -109,15 +123,51 @@ export function createOpenAICompatibleProvider(
         } catch {
           // keep the raw text
         }
+        return detail;
+      };
 
+      let detail = "";
+      if (!res.ok) {
+        detail = await readError();
+
+        // Some models reject requests whose *expected* output tokens exceed
+        // their per-minute output limit ("Limit 1000, Requested 2048") unless
+        // an explicit max_tokens is set. Self-heal: retry once with a safe cap.
+        const limitMatch =
+          res.status === 429 ? /Limit (\d+), Requested \d+/i.exec(detail) : null;
+        const enforcedLimit = limitMatch
+          ? Number.parseInt(limitMatch[1], 10)
+          : Number.NaN;
+        if (Number.isFinite(enforcedLimit) && enforcedLimit > 0) {
+          res = await send(Math.max(enforcedLimit - 50, 128));
+          if (!res.ok) detail = await readError();
+        }
+
+        if (!res.ok && /Request too large/i.test(detail)) {
+          throw new Error(`${label} rejected the request: ${detail}`);
+        }
         if (res.status === 401 || res.status === 403) {
           throw new Error(
             `${label} rejected the API key (${res.status}). Check AI_API_KEY in .env.local.`
           );
         }
         if (res.status === 429) {
-          throw new Error(
-            `${label} rate limit reached (free tier). Wait a moment and retry, or switch AI_PROVIDER.`
+          // Providers tell us how long to wait — via a `retry-after` header,
+          // an `x-ratelimit-reset-*` header, or inside the message itself
+          // ("Please try again in 7.58s").
+          const header =
+            res.headers.get("retry-after") ??
+            res.headers.get("x-ratelimit-reset-tokens");
+          const fromHeader = header ? Number.parseFloat(header) : Number.NaN;
+          const match = /try again in ([\d.]+)\s*s/i.exec(detail);
+          const seconds = Number.isFinite(fromHeader)
+            ? fromHeader
+            : match
+              ? Number.parseFloat(match[1])
+              : Number.NaN;
+          throw new AIRateLimitError(
+            `${label} rate limit reached (free tier). Wait a moment and retry, or switch AI_PROVIDER.`,
+            Number.isFinite(seconds) ? seconds : null
           );
         }
         if (res.status === 404) {

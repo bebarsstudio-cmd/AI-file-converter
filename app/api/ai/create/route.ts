@@ -4,7 +4,7 @@ import {
   getAIProvider,
   type ChatMessage,
 } from "@/lib/ai/provider";
-import type { ChatResult } from "@/lib/ai/openai";
+import { AIRateLimitError, type ChatResult } from "@/lib/ai/openai";
 
 /**
  * App creation endpoint (server-side — AI_API_KEY never reaches the browser).
@@ -92,12 +92,34 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+const RATE_LIMIT_MAX_RETRIES = 3;
+const RATE_LIMIT_MAX_WAIT_MS = 45_000;
+
+/**
+ * One chat round-trip. Rate limits (HTTP 429) are transparently retried
+ * after the wait the provider suggests, so free-tier limits don't surface
+ * as errors unless they keep persisting.
+ */
 async function chatOnce(
   messages: ChatMessage[],
-  temperature: number
+  temperature: number,
+  attempt = 0
 ): Promise<ChatResult> {
-  const provider = getAIProvider();
-  return provider.chat(messages, { temperature });
+  try {
+    const provider = getAIProvider();
+    return await provider.chat(messages, { temperature });
+  } catch (error) {
+    if (error instanceof AIRateLimitError && attempt < RATE_LIMIT_MAX_RETRIES) {
+      const suggested = error.retryAfterSeconds ?? 10;
+      const waitMs = Math.min(
+        Math.max(suggested, 1) * 1000 + 600,
+        RATE_LIMIT_MAX_WAIT_MS
+      );
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+      return chatOnce(messages, temperature, attempt + 1);
+    }
+    throw error;
+  }
 }
 
 const CONTINUE_PROMPT =
