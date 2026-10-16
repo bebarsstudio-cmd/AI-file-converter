@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 /** The public repository shown in the open-source section. */
-const GITHUB_URL = "https://github.com/bebarsstudio-cmd/AI-file-converter";
+const GITHUB_URL = "https://github.com/AAdelMM/AI-file-converter";
 
 const HERO_PHOTO = {
   src: "https://picsum.photos/seed/afc-hero/1600/720",
