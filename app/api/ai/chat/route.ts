@@ -4,6 +4,15 @@ import {
   getAIProvider,
   type ChatMessage,
 } from "@/lib/ai/provider";
+import {
+  checkRateLimit,
+  clampNumber,
+  clientKey,
+  numberFromEnv,
+  readJsonBody,
+  requireFirebaseUser,
+  type GuardFailure,
+} from "@/lib/api/guards";
 
 /**
  * AI chat endpoint — runs server-side so AI_API_KEY never reaches the browser.
@@ -11,9 +20,18 @@ import {
  *   GET  /api/ai/chat  → provider status (no secrets)
  *   POST /api/ai/chat  → { messages: [{ role, content }] } → { content }
  *
- * NOTE: currently unauthenticated (local development). Add auth + quota
- * checks via the Firebase Admin SDK before deploying publicly.
+ * Every POST passes the shared request guards before any AI work happens:
+ * a per-IP rate limit, the optional sign-in check (AI_REQUIRE_AUTH=1), a
+ * body-size cap, plus limits on the number and total length of messages.
  */
+
+const MAX_MESSAGES = 60;
+const MAX_TOTAL_CHARS = 100_000;
+
+/** Turns a guard failure into the JSON error response the guards describe. */
+function fail(failure: GuardFailure): NextResponse {
+  return NextResponse.json({ error: failure.error }, { status: failure.status });
+}
 
 function isChatMessage(value: unknown): value is ChatMessage {
   if (typeof value !== "object" || value === null) return false;
@@ -47,14 +65,21 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
+  const limited = checkRateLimit(`chat:${clientKey(request)}`, {
+    limit: numberFromEnv("AI_RATE_LIMIT_PER_MINUTE", 30),
+  });
+  if (limited) return fail(limited);
 
-  const { messages, temperature, maxTokens } = (body ?? {}) as {
+  const auth = await requireFirebaseUser(request);
+  if (!auth.ok) return fail(auth);
+
+  const bodyResult = await readJsonBody(
+    request,
+    numberFromEnv("AI_MAX_BODY_KB", 1024) * 1024
+  );
+  if (!bodyResult.ok) return fail(bodyResult);
+
+  const { messages, temperature, maxTokens } = (bodyResult.value ?? {}) as {
     messages?: unknown;
     temperature?: unknown;
     maxTokens?: unknown;
@@ -75,12 +100,32 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  if (messages.length > MAX_MESSAGES) {
+    return NextResponse.json(
+      { error: `Too many messages (max ${MAX_MESSAGES} per request).` },
+      { status: 400 }
+    );
+  }
+  const totalChars = messages.reduce(
+    (sum, message) => sum + message.content.length,
+    0
+  );
+  if (totalChars > MAX_TOTAL_CHARS) {
+    return NextResponse.json(
+      { error: "The conversation is too long (max 100,000 characters)." },
+      { status: 400 }
+    );
+  }
 
   try {
     const provider = getAIProvider();
     const reply = await provider.chat(messages, {
-      temperature: typeof temperature === "number" ? temperature : undefined,
-      maxTokens: typeof maxTokens === "number" ? maxTokens : undefined,
+      temperature: clampNumber(temperature, 0, 2),
+      maxTokens: clampNumber(
+        maxTokens,
+        1,
+        numberFromEnv("AI_MAX_OUTPUT_TOKENS", 4096)
+      ),
     });
     return NextResponse.json({
       provider: provider.name,

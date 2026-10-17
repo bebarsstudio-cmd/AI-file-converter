@@ -5,6 +5,15 @@ import {
   type ChatMessage,
 } from "@/lib/ai/provider";
 import { AIRateLimitError, type ChatResult } from "@/lib/ai/openai";
+import { asRecord, stripCodeFences } from "@/lib/ai/parse";
+import {
+  checkRateLimit,
+  clientKey,
+  numberFromEnv,
+  readJsonBody,
+  requireFirebaseUser,
+  type GuardFailure,
+} from "@/lib/api/guards";
 
 /**
  * App creation endpoint (server-side — AI_API_KEY never reaches the browser).
@@ -20,8 +29,15 @@ import { AIRateLimitError, type ChatResult } from "@/lib/ai/openai";
  * input — HTML, CSS, or any other language — is converted into one runnable
  * JS file.
  *
- * NOTE: unauthenticated for now — add auth + quota checks before deploying.
+ * Every POST passes the shared request guards before any AI work happens:
+ * a per-IP rate limit, the optional sign-in check (AI_REQUIRE_AUTH=1) and a
+ * body-size cap.
  */
+
+/** Turns a guard failure into the JSON error response the guards describe. */
+function fail(failure: GuardFailure): NextResponse {
+  return NextResponse.json({ error: failure.error }, { status: failure.status });
+}
 
 const TARGET_LANGUAGES = ["C++", "Java", "JavaScript", "TypeScript"] as const;
 type TargetLanguage = (typeof TARGET_LANGUAGES)[number];
@@ -73,24 +89,6 @@ Never refuse and never ask questions — every source becomes working JavaScript
       "Output a single complete app.ts: strict TypeScript targeting the DOM, no runtime dependencies, no bundler assumptions. Include explicit types for state and functions.",
   },
 };
-
-/** Removes markdown code fences a model may wrap its output in. */
-function stripCodeFences(text: string): string {
-  let out = text.trim();
-  if (out.startsWith("```")) {
-    out = out.replace(/^```[^\n]*\n?/, "");
-  }
-  if (out.endsWith("```")) {
-    out = out.replace(/\n?```\s*$/, "");
-  }
-  return out.trim();
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null
-    ? (value as Record<string, unknown>)
-    : null;
-}
 
 const RATE_LIMIT_MAX_RETRIES = 3;
 const RATE_LIMIT_MAX_WAIT_MS = 45_000;
@@ -263,14 +261,21 @@ async function handleConvert(
 }
 
 export async function POST(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
+  const limited = checkRateLimit(`create:${clientKey(request)}`, {
+    limit: numberFromEnv("AI_RATE_LIMIT_PER_MINUTE", 30),
+  });
+  if (limited) return fail(limited);
 
-  const payload = asRecord(body);
+  const auth = await requireFirebaseUser(request);
+  if (!auth.ok) return fail(auth);
+
+  const bodyResult = await readJsonBody(
+    request,
+    numberFromEnv("AI_MAX_BODY_KB", 1024) * 1024
+  );
+  if (!bodyResult.ok) return fail(bodyResult);
+
+  const payload = asRecord(bodyResult.value);
   if (!payload) {
     return NextResponse.json(
       { error: "Body must be a JSON object." },
