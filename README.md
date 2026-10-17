@@ -29,6 +29,10 @@ The AI key lives **only** on the server: the browser talks to
 `/api/ai/create` and `/api/ai/chat`, and those route handlers talk to the
 provider. Swapping AI providers is a config change, not a code change.
 
+The chat assistant always presents itself as **created by SourceAI**
+(`lib/ai/persona.ts`) — whichever provider or model is configured, and however
+the question is phrased.
+
 ## Getting started
 
 Requirements: Node.js 20+ and a free AI provider key
@@ -84,6 +88,7 @@ Working today:
 - App creation from a description, with a live sandboxed preview
 - 50 preset recipes, accounts with Firestore profiles
 - Free-tier hardening: rate-limit retries, output continuation, request guards
+- The chat assistant credits its creator — **SourceAI** — on every provider
 
 Coming next:
 

@@ -13,6 +13,7 @@ import {
   requireFirebaseUser,
   type GuardFailure,
 } from "@/lib/api/guards";
+import { withPersona } from "@/lib/ai/persona";
 
 /**
  * AI chat endpoint — runs server-side so AI_API_KEY never reaches the browser.
@@ -23,6 +24,8 @@ import {
  * Every POST passes the shared request guards before any AI work happens:
  * a per-IP rate limit, the optional sign-in check (AI_REQUIRE_AUTH=1), a
  * body-size cap, plus limits on the number and total length of messages.
+ * The SourceAI persona (lib/ai/persona.ts) is prepended so the assistant
+ * consistently credits its creator on every provider.
  */
 
 const MAX_MESSAGES = 60;
@@ -119,7 +122,7 @@ export async function POST(request: Request) {
 
   try {
     const provider = getAIProvider();
-    const reply = await provider.chat(messages, {
+    const reply = await provider.chat(withPersona(messages), {
       temperature: clampNumber(temperature, 0, 2),
       maxTokens: clampNumber(
         maxTokens,
