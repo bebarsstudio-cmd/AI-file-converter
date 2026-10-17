@@ -8,7 +8,7 @@
  * Configure via environment variables (server-side only — never expose the
  * key to the browser):
  *
- *   AI_PROVIDER  groq | openrouter | mistral | openai | custom
+ *   AI_PROVIDER  groq | openrouter | mistral | openai | nova | custom
  *   AI_API_KEY   the provider's API key
  *   AI_MODEL     model id (optional — falls back to a per-provider default)
  *   AI_BASE_URL  only for AI_PROVIDER=custom (any OpenAI-compatible host)
@@ -39,6 +39,8 @@ interface ProviderPreset {
  *   groq       → https://console.groq.com/keys        (fastest; ~1,000 req/day free)
  *   openrouter → https://openrouter.ai/keys           (:free models; 50 req/day until $10 credited)
  *   mistral    → https://console.mistral.ai            (Codestral; free plan credits)
+ *   nova       → SourceAI's own AI on this computer    (http://127.0.0.1:8077 — key from
+ *                Nova's console at /apikey; no cloud bill at all)
  */
 const PROVIDER_PRESETS: Record<string, ProviderPreset> = {
   groq: {
@@ -60,6 +62,11 @@ const PROVIDER_PRESETS: Record<string, ProviderPreset> = {
     label: "OpenAI",
     baseUrl: "https://api.openai.com/v1",
     defaultModel: "gpt-4o",
+  },
+  nova: {
+    label: "Nova (SourceAI)",
+    baseUrl: "http://127.0.0.1:8077/v1",
+    defaultModel: "nova",
   },
 };
 

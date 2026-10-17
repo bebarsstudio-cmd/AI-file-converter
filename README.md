@@ -1,5 +1,7 @@
 # 1devv
 
+> **1.0 BETA** — the first beta release 🎉
+
 A free, AI-powered workshop that turns projects from one language into another
 — and builds small new ones from a description.
 
@@ -19,7 +21,7 @@ Everything is open source, and it is designed to run on free AI tiers.
 | Piece | What it does |
 | --- | --- |
 | `app/` | Next.js App Router pages + the `app/api/ai/*` route handlers |
-| `lib/ai/` | The provider layer: one OpenAI-compatible adapter + presets for Groq, OpenRouter, Mistral, OpenAI, or any custom endpoint |
+| `lib/ai/` | The provider layer: one OpenAI-compatible adapter + presets for Groq, OpenRouter, Mistral, OpenAI, **Nova** (SourceAI's own AI, running on your computer), or any custom endpoint |
 | `components/` | The whole UI — glass cards, animated backdrop, preset strip, previews |
 | `presets/` | 50 conversion recipes — pure data, easy to extend |
 | `lib/firebase/` | Accounts and profiles (Firebase Auth + Firestore) |
@@ -49,6 +51,19 @@ Open [http://localhost:3000](http://localhost:3000).
 At minimum, set `AI_API_KEY` in `.env.local`. Firebase values are only needed
 for accounts (login / signup); the converter works without them.
 
+### Run it on Nova ⭐ (optional)
+
+**Nova** is SourceAI's own AI. If she's running on the same computer
+(`./start.sh` in her folder), 1devv can use her as its brain:
+
+```bash
+AI_PROVIDER=nova
+AI_API_KEY=b1-…        # create one in Nova's console: http://127.0.0.1:8077/apikey
+AI_MODEL=nova          # or a cloud model id from Nova's 🧠 switch (gpt-oss:120b, …)
+```
+
+No cloud bill, no external key — just Nova, right there on `127.0.0.1:8077`.
+
 ## Configuration
 
 All variables live in `.env.local` (gitignored). `.env.example` documents them
@@ -56,7 +71,7 @@ too.
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `AI_PROVIDER` | `groq` | `groq`, `openrouter`, `mistral`, `openai` or `custom` |
+| `AI_PROVIDER` | `groq` | `groq`, `openrouter`, `mistral`, `openai`, `nova` or `custom` |
 | `AI_API_KEY` | — | The provider's key. **Never** `NEXT_PUBLIC_`. |
 | `AI_MODEL` | preset default | Model id, e.g. a Groq model |
 | `AI_BASE_URL` | — | Only for `custom`: any OpenAI-compatible endpoint |
