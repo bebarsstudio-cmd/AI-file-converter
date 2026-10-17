@@ -7,7 +7,7 @@ import AuthProvider from "@/components/providers/AuthProvider";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "AI File Converter",
+  title: "1devv",
   description: "Transform your projects with AI. Convert, refactor, and preserve what matters.",
 };
 

@@ -21,9 +21,9 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About — AI File Converter",
+  title: "About — 1devv",
   description:
-    "Why AI File Converter exists, how it works, and why it will always be free and open source.",
+    "Why 1devv exists, how it works, and why it will always be free and open source.",
 };
 
 /** The public repository shown in the open-source section. */
@@ -160,7 +160,7 @@ export default function AboutPage() {
           Free &amp; open source
         </span>
         <h1 className="text-gradient mt-5 text-4xl font-bold md:text-5xl">
-          About AI File Converter
+          About 1devv
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-400">
           A free, AI-powered workshop that turns projects from one language into
@@ -196,7 +196,7 @@ export default function AboutPage() {
           the interesting decisions stay with you.
         </p>
         <p>
-          AI File Converter was built around one bet: a model that understands
+          1devv was built around one bet: a model that understands
           your project as a whole can port it faithfully — preserving behavior,
           naming and structure — as long as it is given the right context, the
           right instructions, and the freedom to work recipe by recipe instead

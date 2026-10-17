@@ -78,7 +78,7 @@ export default function Navbar() {
               {hasLogo ? (
                 <Image
                   src="/logo.png"
-                  alt="AI File Converter"
+                  alt="1devv"
                   width={200}
                   height={64}
                   className="h-10 w-auto"
@@ -90,7 +90,7 @@ export default function Navbar() {
                     <Sparkles size={18} className="text-white" />
                   </div>
                   <span className="text-lg font-bold text-white hidden sm:block">
-                    AI File Converter
+                    1devv
                   </span>
                 </>
               )}

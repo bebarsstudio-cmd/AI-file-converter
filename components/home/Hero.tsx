@@ -22,7 +22,7 @@ export default function Hero() {
   return (
     <div className="animate-in-up text-center space-y-4">
       <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-gradient">
-  AI File Converter
+  1devv
 </h1>
       <div className="h-10 flex items-center justify-center overflow-hidden">
         <p 
